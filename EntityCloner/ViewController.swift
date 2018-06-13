@@ -15,25 +15,31 @@ class ViewController: UIViewController {
         
         
         
-        // algoCases()
-        runUnitTests()
+        algoCases()
+        // runUnitTests()
     }
     
     func algoCases() {
+        
+        // Example 1
         EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4"), (5, "Entity5"), (6, "Entity6"), ],
                                      links: [(1, 2), (2,3), (2,4), (2,5), (5,6), (4,3), (6,2), (2,2), (6,6)],
                                      cloneEntityId: 2)
         
         
+        // Example 2
         EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")],
                                      links: [],
                                      cloneEntityId: 2)
         
+        
+        // Example 3
         EntityCloner().computeResult(entities: [(1, "Entity 1")],
                                      links: [],
                                      cloneEntityId: 1)
         
         
+        // Example 4
         EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")],
                                      links: [(1, 2), (1, 3), (2, 3), (3, 4)],
                                      cloneEntityId: 2)
