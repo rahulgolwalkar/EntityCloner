@@ -16,10 +16,19 @@ class ViewController: UIViewController {
         
         
         do {
+            _ = try EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")],
+                links: [(1, 2), (1, 3), (2, 3), (3, 4)],
+                cloneEntityId: 2)
+        } catch {
+            print (error)
+        }
+        
+        do {
             _ = try EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")], links: [(1, 2), (1, 3), (2, 3), (3, 4)], cloneEntityId: 2)
         } catch {
             print (error)
         }
+
         
     }
 
@@ -74,21 +83,17 @@ class EntityCloner {
     
     
     // Time complexity O(n+l) where n is the number of Entity nodes and l is the number of links
-    func computeResult(entities: [(Int, String)], links: [(Int, Int)], cloneEntityId: Int) throws -> [Int: Entity] {
+    func computeResult(entities: [(Int, String)], links: [(Int, Int)], cloneEntityId: Int) -> [Int: Entity] {
         for each in entities {
-            _ = try createEntity(id: each.0, name: each.1, description: each.1)
+            _ = createEntity(id: each.0, name: each.1, description: each.1)
         }
         
         for each in links {
-            try createLink(each.0, each.1)
+            createLink(each.0, each.1)
         }
         
         deepClone(origId: cloneEntityId)
-        
-        let eee = entityDictionary
-        
         printResult()
-        
         
         return entityDictionary
     }
@@ -171,24 +176,24 @@ class EntityCloner {
     }
     
     func createEntity(name: String, description: String) -> Int {
+//        do {
+//        } catch {
+//            print("Some issue with unique ID generator - ", error)
+//        }
         let id = generateUniqueId()
-        do {
-            _ = try createEntity(id: id, name: name, description: description)
-        } catch {
-            print("Some issue with unique ID generator - ", error)
-        }
+        _ = createEntity(id: id, name: name, description: description)
         return id
     }
     
-    
-    // O(1)
+    // Returns an object of the item
     // input - ID, name , description
     // return - the reference to the generated Object
     // throws - in case it uses an existing ID
-    func createEntity(id: Int, name: String, description: String) throws -> Entity {
-        if (entityDictionary[id] != nil) {
-            throw EntityClonerError.NonUniqueId
-        }
+    // O(1)
+    func createEntity(id: Int, name: String, description: String) -> Entity {
+//        if (entityDictionary[id] != nil) {
+//            throw EntityClonerError.NonUniqueId
+//        }
         
         let tempEntity = Entity(name: name, description: description)
         entityDictionary[id] = tempEntity
@@ -196,10 +201,10 @@ class EntityCloner {
         return tempEntity
     }
     
-    enum EntityClonerError: String, Error {
-        case NonUniqueId = "Entity created is with a non-unique ID, i.e. ID already exists"
-        case EntityDoesntExist = "Entity with the given ID does not exist"
-    }
+//    enum EntityClonerError: String, Error {
+//        case NonUniqueId = "Entity created is with a non-unique ID, i.e. ID already exists"
+//        case EntityDoesntExist = "Entity with the given ID does not exist"
+//    }
 }
 
 
