@@ -12,38 +12,103 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
         
         
-        do {
-            _ = try EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")],
-                links: [(1, 2), (1, 3), (2, 3), (3, 4)],
-                cloneEntityId: 2)
-        } catch {
-            print (error)
-        }
         
-        do {
-            _ = try EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")], links: [(1, 2), (1, 3), (2, 3), (3, 4)], cloneEntityId: 2)
-        } catch {
-            print (error)
-        }
-
-        
+        // algoCases()
+        runUnitTests()
     }
+    
+    func algoCases() {
+        EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4"), (5, "Entity5"), (6, "Entity6"), ],
+                                     links: [(1, 2), (2,3), (2,4), (2,5), (5,6), (4,3), (6,2), (2,2), (6,6)],
+                                     cloneEntityId: 2)
+        
+        
+        EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")],
+                                     links: [],
+                                     cloneEntityId: 2)
+        
+        EntityCloner().computeResult(entities: [(1, "Entity 1")],
+                                     links: [],
+                                     cloneEntityId: 1)
+        
+        
+        EntityCloner().computeResult(entities: [(1, "Entity 1"), (2, "Entity 2"), (3, "Entity 3"), (4, "Entity 4")],
+                                     links: [(1, 2), (1, 3), (2, 3), (3, 4)],
+                                     cloneEntityId: 2)
 
+    }
+    
+    func runUnitTests() {
+        unitTest1()
+        unitTest2()
+        unitTest3()
+    }
+    func unitTest1() {
+        let eCloner = EntityCloner()
+        var idSet = Set<Int>()
+        for _ in 0..<10000 {
+            let temp = eCloner.createEntity(name: "Test name", description: "Test description")
+            if idSet.contains(temp) {
+                print("unitTest1 failed!!")
+                return
+            }
+            idSet.insert(temp)
+        }
+        print("unitTest1 Succeeded - createEntity")
+        return
+    }
+    func unitTest2() {
+        let eCloner = EntityCloner()
+        let id = eCloner.createEntity(name: "some name", description: "some Description")
+        let newId = eCloner.cloneEntity(id: id)
+        let oldEntity = eCloner.entityDictionary[id]
+        let clonedEntity = eCloner.entityDictionary[newId]
+        if (oldEntity?.name != clonedEntity?.name) || ((oldEntity?.description)! != (clonedEntity?.description)!) {
+            print("unitTest2 failed!! - cloning")
+            return
+        }
+        print("unitTest2 Succeeded - cloning entity")
+        
+        eCloner.createLink(id, newId)
+        if (oldEntity?.outwardConnections.contains(newId))! && (clonedEntity?.inwardConnetions.contains(id))! {
+            print("unitTest2 Succeeded - creating links")
+        } else {
+            print("unitTest2 Failed!! - creating links")
+        }
+    }
+    
+    func unitTest3() {
+        let eCloner = EntityCloner()
+        let id = eCloner.createEntity(name: "hello", description: "world")
+        let newId = eCloner.createEntity(name: "hello2", description: "world2")
+        eCloner.entityDictionary[id]?.outwardConnections.insert(newId)
+        eCloner.entityDictionary[newId]?.inwardConnetions.insert(id)
+        
+        let tempId = eCloner.createEntity(name: "hello 33", description: "workdl 33")
+        
+        eCloner.copyInwardLinks(clonedId: tempId, origId: newId)
+        
+        if ((eCloner.entityDictionary[tempId]?.inwardConnetions.contains(id))! && (eCloner.entityDictionary[id]?.outwardConnections.contains(tempId))!) {
+            print("unitTest3 Succeeded - inward links - Positive")
+        } else {
+            print("unitTest3 Failed!!! - Postive case")
+        }
+        
+        if (eCloner.entityDictionary[tempId]?.inwardConnetions.contains(tempId))! {
+            print("unitTest3 Failed!! - negative Test case")
+        }
+    }
 
 }
 
 class EntityCloner {
-    // rrrr proper access modifiers
-    // explain the code once..
-    // proper comments
-    // share the order of each function
     
     var approxIdCounter = 0
     var entityDictionary = [Int: Entity]()
     
+    // Generates a unique ID
     // Order - Best and average case = O(1)
     // Worst case - O(n) where n is the number of entities
     func generateUniqueId() -> Int {
@@ -54,6 +119,7 @@ class EntityCloner {
     }
     
     
+    // Entity Class
     class Entity {
         var name = String()
         var description = String()
@@ -68,11 +134,8 @@ class EntityCloner {
         }
     }
     
+    // creates the link by adding the relevant connections in the entities
     func createLink(_ from: Int, _ to: Int)  {
-//        guard let fromEntity = entityDictionary[from], let toEntity = entityDictionary[to] else {
-//            throw EntityClonerError.EntityDoesntExist
-//        }
-        
         let fromEntity = entityDictionary[from]
         let toEntity = entityDictionary[to]
         
@@ -80,10 +143,8 @@ class EntityCloner {
         toEntity?.inwardConnetions.insert(from)
     }
     
-    
-    
-    // Time complexity O(n+l) where n is the number of Entity nodes and l is the number of links
-    func computeResult(entities: [(Int, String)], links: [(Int, Int)], cloneEntityId: Int) -> [Int: Entity] {
+    // creates the graph and prints the result
+    func computeResult(entities: [(Int, String)], links: [(Int, Int)], cloneEntityId: Int) {
         for each in entities {
             _ = createEntity(id: each.0, name: each.1, description: each.1)
         }
@@ -94,13 +155,13 @@ class EntityCloner {
         
         deepClone(origId: cloneEntityId)
         printResult()
-        
-        return entityDictionary
     }
     
+    // Prints the result
     func printResult() {
+        print("\n\n------Output------ \n")
         var entities = "Entities: "
-        var links = "Links: "
+        var links = "\nLinks: "
         for each in entityDictionary {
             entities += "{\(each.key), \"\(each.value.name)\"}, "
             for i in each.value.outwardConnections {
@@ -113,21 +174,21 @@ class EntityCloner {
         
         print(entities)
         print(links)
-        
     }
     
+    // Handles the cloning process at a higher level
     func deepClone(origId: Int) {
         // create the primary clone
         let clonedId = cloneEntity(id: origId)
         
-        // copy all incoming connections from the original to the first clone
-        copyInwardLinks(clonedId: clonedId, origId: origId)
-        
         // replicate the graph
         replicateGraph(origId: origId, clonedId: clonedId)
         
+        // copy all incoming connections from the original to the first clone
+        copyInwardLinks(clonedId: clonedId, origId: origId)
     }
     
+    // used to copy the incoming links to the first node that is newly generated
     func copyInwardLinks(clonedId: Int, origId: Int) {
         let inwardSet = (entityDictionary[origId]?.inwardConnetions)!
         entityDictionary[clonedId]?.inwardConnetions = inwardSet
@@ -137,6 +198,7 @@ class EntityCloner {
         }
     }
     
+    // Replicates the newly created graph
     func replicateGraph(origId: Int, clonedId: Int) {
         var clonedEntityMapping = [Int:Int]()
         clonedEntityMapping[origId] = clonedId
@@ -167,6 +229,7 @@ class EntityCloner {
         }
     }
     
+    // Makes a copy of the entity
     func cloneEntity(id: Int) -> Int {
         guard let origEntity = entityDictionary[id] else {
             print("invalid entity")
@@ -175,11 +238,8 @@ class EntityCloner {
         return createEntity(name: origEntity.name, description: origEntity.description)
     }
     
+    // Creates a new Entity based on the name and description parameters
     func createEntity(name: String, description: String) -> Int {
-//        do {
-//        } catch {
-//            print("Some issue with unique ID generator - ", error)
-//        }
         let id = generateUniqueId()
         _ = createEntity(id: id, name: name, description: description)
         return id
@@ -191,20 +251,11 @@ class EntityCloner {
     // throws - in case it uses an existing ID
     // O(1)
     func createEntity(id: Int, name: String, description: String) -> Entity {
-//        if (entityDictionary[id] != nil) {
-//            throw EntityClonerError.NonUniqueId
-//        }
-        
         let tempEntity = Entity(name: name, description: description)
         entityDictionary[id] = tempEntity
         approxIdCounter = (approxIdCounter<=id) ? (id + 1) : approxIdCounter
         return tempEntity
     }
-    
-//    enum EntityClonerError: String, Error {
-//        case NonUniqueId = "Entity created is with a non-unique ID, i.e. ID already exists"
-//        case EntityDoesntExist = "Entity with the given ID does not exist"
-//    }
 }
 
 
